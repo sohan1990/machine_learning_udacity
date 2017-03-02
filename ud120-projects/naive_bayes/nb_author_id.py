@@ -26,17 +26,19 @@ features_train, features_test, labels_train, labels_test = preprocess()
 #########################################################
 ### your code goes here ###
 clf = GaussianNB()
+t0 = time()
 clf.fit(features_train, labels_train)
-print 'Time taken to train: %1.5f' % time()
+print 'Training time = ', round(time()-t0,3),"s"
 GaussianNB(priors=None)
+t1 = time()
 prd = clf.predict(features_test)
-
+print 'Testing time = ', round(time()-t1,3),"s"
 count=0
 for i,j in zip(prd,labels_test):
     if i==j:
         count = count + 1
 accuracy = float(count)/len(labels_test)
-print accuracy
+print 'Accuracy = ',accuracy
 
 """"
 from sklearn.metrics import accuracy_score
