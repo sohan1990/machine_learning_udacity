@@ -9,9 +9,10 @@
     Sara has label 0
     Chris has label 1
 """
-    
 import sys
 from time import time
+
+from sklearn.naive_bayes import GaussianNB
 sys.path.append("../tools/")
 from email_preprocess import preprocess
 
@@ -22,12 +23,25 @@ from email_preprocess import preprocess
 features_train, features_test, labels_train, labels_test = preprocess()
 
 
-
-
 #########################################################
 ### your code goes here ###
+clf = GaussianNB()
+clf.fit(features_train, labels_train)
+print 'Time taken to train: %1.5f' % time()
+GaussianNB(priors=None)
+prd = clf.predict(features_test)
 
+count=0
+for i,j in zip(prd,labels_test):
+    if i==j:
+        count = count + 1
+accuracy = float(count)/len(labels_test)
+print accuracy
 
+""""
+from sklearn.metrics import accuracy_score
+acc = accuracy_score(prd,labels_test)
+print acc
+print GaussianNB
+"""
 #########################################################
-
-
