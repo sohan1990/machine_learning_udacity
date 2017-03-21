@@ -43,18 +43,23 @@ data_dict.pop("TOTAL", 0)
 ### can be any key in the person-level dictionary (salary, director_fees, etc.) 
 feature_1 = "salary"
 feature_2 = "exercised_stock_options"
-feature_3 = "total_payments"
 poi  = "poi"
-features_list = [poi, feature_1, feature_2, feature_3]
+features_list = [poi, feature_1, feature_2]
 data = featureFormat(data_dict, features_list )
 poi, finance_features = targetFeatureSplit( data )
 
+
+### feature scaling
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+rescaled_data = scaler.fit_transform(data[:,1:])  # fit_transform fits and transforms in 1 step. done for initial data set
+print scaler.transform([[200000, 1000000]])       # for test data(not present in data set) we only perform transform
 
 ### in the "clustering with 3 features" part of the mini-project,
 ### you'll want to change this line to 
 ### for f1, f2, _ in finance_features:
 ### (as it's currently written, the line below assumes 2 features)
-for f1, f2, _ in finance_features:
+for f1, f2 in finance_features:
     plt.scatter( f1, f2 )
 plt.show()
 
@@ -92,3 +97,4 @@ print "Minimum exercised stock options =", min
 
 print "Maximum salary =", data[:,1].max()
 print "Minimum salary =", (data[:,1][numpy.nonzero(data[:,1])]).min()
+
