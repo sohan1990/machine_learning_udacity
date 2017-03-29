@@ -41,20 +41,33 @@ for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
     for path in from_person:
         ### only look at first 200 emails when developing
         ### once everything is working, remove this line to run over full dataset
-        temp_counter += 1
+        #temp_counter += 1
         if temp_counter < 200:
             path = os.path.join('..', path[:-1])
             print path
             email = open(path, "r")
 
             ### use parseOutText to extract the text from the opened email
+            words = parseOutText(email)  # check this against kaustubh
+            #print words
 
             ### use str.replace() to remove any instances of the words
             ### ["sara", "shackleton", "chris", "germani"]
+            words = words.replace("sara","")
+            words = words.replace("shackleton","")
+            words = words.replace("chris","")
+            words = words.replace("germani","")
+            words = words.replace("sshacklensf", '')
+            words = words.replace("cgermannsf", '')
 
             ### append the text to word_data
+            word_data.append(words)
 
             ### append a 0 to from_data if email is from Sara, and 1 if email is from Chris
+            if name == "sara":
+                from_data.append(0)
+            else:
+                from_data.append(1)
 
 
             email.close()
@@ -66,10 +79,21 @@ from_chris.close()
 pickle.dump( word_data, open("your_word_data.pkl", "w") )
 pickle.dump( from_data, open("your_email_authors.pkl", "w") )
 
-
-
-
+#print word_data     # word_data has a length equal to the number of emails being read
+print len(word_data)
+print word_data[152]
 
 ### in Part 4, do TfIdf vectorization here
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer(stop_words="english")
+word_data2 = vectorizer.fit_transform(word_data)
+
+#print word_data2.toarray()         # this gives the matrix for the word position on the features list with the weights
+
+# length of unique_words is wrong
+unique_words = vectorizer.get_feature_names()
+print len(unique_words)
+print unique_words
 
 
