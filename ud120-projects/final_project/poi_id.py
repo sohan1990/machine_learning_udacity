@@ -80,8 +80,6 @@ clf = GaussianNB()
 
 ### Task 5: Data processing
 
-features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.3, random_state=42)
-
 from sklearn.decomposition import PCA
 
 def preprocessing_pca(features_train, features_test):
@@ -92,20 +90,15 @@ def preprocessing_pca(features_train, features_test):
     return features_train_pca, features_test_pca
 
 
+features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.3, random_state=42)
+features_train, features_test = preprocessing_pca(features_train, features_test)
 
-### Task 6: Apply classifier
 
-from sklearn.model_selection import KFold
-kf = KFold(n_splits=100)
-for train_indices, test_indices in kf.split(features):
-    features_train = [features[ii] for ii in train_indices]
-    features_test = [features[ii] for ii in test_indices]
-    labels_train = [labels[ii] for ii in train_indices]
-    labels_test = [labels[ii] for ii in test_indices]
 
-    features_train, features_test = preprocessing_pca(features_train, features_test)
 
-    clf.fit(features_train, labels_train)
+### Task 6: Applying classifier
+
+clf.fit(features_train, labels_train)
 
 
 pred = clf.predict(features_test)
