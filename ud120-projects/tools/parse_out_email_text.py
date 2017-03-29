@@ -42,21 +42,13 @@ def parseOutText(f):
         temp = []
         for word in words:
             temp.append(stemmer.stem(word))
+        #temp = [stemmer.stem(w) for w in words]
 
-        delimiter = ' '
+        delimiter = " "
         words = delimiter.join(temp)
 
     return words
 
-"""
-        answ = []
-        for word in words:
-            s = stemmer.stem(word)
-            if s:
-                answ.append(s.rstrip())
-        answ = ' '.join(answ)
-    return answ
-"""
 
 def main():
     ff = open("../text_learning/test_email.txt", "r")
