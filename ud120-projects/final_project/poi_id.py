@@ -11,6 +11,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
+### data load and pre-process
+def data_load_process():
+    # Load the dictionary containing the dataset
+    with open("final_project_dataset.pkl", "r") as data_file:
+        data_dict = pickle.load(data_file)
+
+    # Remove outliers
+    outliers = ['TOTAL']
+    for outlier in outliers:
+        data_dict.pop(outlier, 0)
+
+    #print data_dict
+
+    return data_dict
+
+
 ### classifier function
 def classifier_list():
 
@@ -26,7 +42,7 @@ def classifier_list():
     clf_svm = LinearSVC()
     clf_svm_params = {"C": [1, 5, 10, 15, 20],
                      "tol": [0.1, 0.01, 0.001, 0.0001],
-                     "dual": False}
+                     "dual": [False]}
     clf_list.append((clf_svm, clf_svm_params))
 
     # DECISION TREE
@@ -40,7 +56,7 @@ def classifier_list():
     from sklearn.ensemble import AdaBoostClassifier
     clf_ada = AdaBoostClassifier()
     clf_ada_params = {"n_estimators": [20, 30, 40, 50],
-                      "learning_rate": [0.1, 0.5, 1, 2, 5],
+                      #"learning_rate": [0.1, 0.5, 1, 2, 5],
                       "algorithm": ["SAMME", "SAMME.R"]}
     clf_list.append((clf_ada, clf_ada_params))
 
@@ -62,12 +78,25 @@ def classifier_list():
     return clf_list
 
 
+### Applying gridsearch to the classifier list
+def classify(clf_list, features_train, labels_train):
 
+    # testing gridsearchcv
+    from sklearn.model_selection import GridSearchCV
 
+    for classifier, params in clf_list:
 
+        #print classifier
+        #print params
 
+        clf_rev = GridSearchCV(classifier, params)
+        clf_rev.fit(features_train, labels_train)
+        try:
+            print clf_rev.best_estimator_
+        except:
+            print "no best estimator available for this classifier"
 
-
+    return 0
 
 
 
@@ -91,30 +120,15 @@ financial_features = ['salary',
                       'restricted_stock',
                       'director_fees']
 
-#email_features = ['to_messages', 'email_address', 'from_poi_to_this_person', 'from_messages', 'from_this_person_to_poi',
-#                 'shared_receipt_with_poi']
+email_features = ['to_messages',
+                  'from_poi_to_this_person',
+                  'from_messages',
+                  'from_this_person_to_poi',
+                  'shared_receipt_with_poi']
 
 
-features_list = poi + financial_features
-#features_list = ['poi', 'salary', 'bonus']
-print features_list
-
-### Load the dictionary containing the dataset
-with open("final_project_dataset.pkl", "r") as data_file:
-    data_dict = pickle.load(data_file)
-#print data_dict
-
-
-
-
-
-### Task 2: Remove outliers
-
-outliers = ['TOTAL']
-for outlier in outliers:
-    data_dict.pop(outlier,0)
-
-
+features_list = poi + financial_features + email_features
+#print features_list
 
 
 ### Task 3: Create new feature(s)
@@ -122,14 +136,12 @@ for outlier in outliers:
 new_features = []
 
 ### Store to my_data set for easy export below.
+data_dict = data_load_process()
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
-
-
-
 
 
 
@@ -139,13 +151,9 @@ labels, features = targetFeatureSplit(data)
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
-# Provided to give you a starting point. Try a variety of classifiers.
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
-
-
-
-
+# create the classifier list
+#from sklearn.naive_bayes import GaussianNB
+#clf = GaussianNB()
 
 
 ### Task 5: Data processing
@@ -168,12 +176,21 @@ features_train, features_test = preprocessing_pca(features_train, features_test)
 
 ### Task 6: Applying classifier
 
-clf.fit(features_train, labels_train)
+clf_list = classifier_list()
+
+#for clf in clf_list:
+#    print clf
+
+a = classify(clf_list, features_train, labels_train)
 
 
-pred = clf.predict(features_test)
-acc = accuracy_score(pred, labels_test)
-print acc
+
+#clf.fit(features_train, labels_train)
+
+
+#pred = clf.predict(features_test)
+#acc = accuracy_score(pred, labels_test)
+#print acc
 
 
 
@@ -183,4 +200,4 @@ print acc
 
 ### Task 7: Dump your classifier, dataset, and features_list
 
-dump_classifier_and_data(clf, my_dataset, features_list)
+#dump_classifier_and_data(clf, my_dataset, features_list)
