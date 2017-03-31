@@ -9,7 +9,15 @@ from tester import dump_classifier_and_data
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-
+from sklearn.svm import LinearSVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import recall_score, precision_score, f1_score
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
 
 ### data load and pre-process
 def data_load_process():
@@ -32,13 +40,12 @@ def classifier_list():
 
     clf_list = []
     # NAIVE BAYES
-    from sklearn.naive_bayes import GaussianNB
-    clf_NB = GaussianNB()
-    clf_NB_params = {}
-    clf_list.append((clf_NB, clf_NB_params))
+    #from sklearn.naive_bayes import GaussianNB
+    #clf_NB = GaussianNB()
+    #clf_NB_params = {}
+    #clf_list.append((clf_NB, clf_NB_params))
 
     # SVM
-    from sklearn.svm import LinearSVC
     clf_svm = LinearSVC()
     clf_svm_params = {"C": [1, 5, 10, 15, 20],
                      "tol": [0.1, 0.01, 0.001, 0.0001],
@@ -46,14 +53,12 @@ def classifier_list():
     clf_list.append((clf_svm, clf_svm_params))
 
     # DECISION TREE
-    from sklearn.tree import DecisionTreeClassifier
     clf_tree = DecisionTreeClassifier()
     clf_tree_params = {"min_samples_split": [2,5,10,15,20],
                       "criterion": ["gini", "entropy"]}
     clf_list.append((clf_tree, clf_tree_params))
 
     # ADABOOST
-    from sklearn.ensemble import AdaBoostClassifier
     clf_ada = AdaBoostClassifier()
     clf_ada_params = {"n_estimators": [20, 30, 40, 50],
                       #"learning_rate": [0.1, 0.5, 1, 2, 5],
@@ -61,7 +66,6 @@ def classifier_list():
     clf_list.append((clf_ada, clf_ada_params))
 
     # RANDOM FOREST
-    from sklearn.ensemble import RandomForestClassifier
     clf_rforest = RandomForestClassifier()
     clf_rforest_params = {"n_estimators": [20, 30, 40, 50],
                           "criterion": ["gini", "entropy"],
@@ -69,7 +73,6 @@ def classifier_list():
     clf_list.append((clf_rforest, clf_rforest_params))
 
     # LOGISTIC REGRESSION
-    from sklearn.linear_model import LogisticRegression
     clf_logreg = LogisticRegression()
     clf_logreg_params = {"C": [0.1, 1, 10, 50, 100],
                          "tol": [0.1, 0.01, 0.001, 0.0001],}
@@ -78,11 +81,12 @@ def classifier_list():
     return clf_list
 
 
+
+
 ### Applying gridsearch to the classifier list
 def classify(clf_list, features_train, labels_train):
 
     # testing gridsearchcv
-    from sklearn.model_selection import GridSearchCV
     best_clf_list = []
 
     for classifier, params in clf_list:
@@ -96,10 +100,10 @@ def classify(clf_list, features_train, labels_train):
 
     return best_clf_list
 
+
+
 ### Evaluate the accuracy, recall and precision of the classifiers
 def evaluate(clf_list, features_test, labels_test):
-
-    from sklearn.metrics import recall_score, precision_score, f1_score
 
     new_list = []
     for clf in clf_list:
@@ -111,13 +115,38 @@ def evaluate(clf_list, features_test, labels_test):
 
     return new_list
 
-### sort the classifier list according to their f1-score
+
+
+### Sort the classifier list according to their f1-score
 def sort_clf(clf_list):
 
     clf_list_sorted = sorted(clf_list, key = lambda x:x[3], reverse=True)
 
     return clf_list_sorted
 
+### Function to add PCA
+def add_pca(clf_list):
+
+    pca = PCA()
+    pca_params = {'pca__n_components': [5, 10, 15]}
+
+    delimiter = '('
+    clf_list_new = []
+
+    for classifier in clf_list:
+        clf, params = classifier
+        name = str(clf).split(delimiter)
+        new_param = {}
+        for param, values in params.iteritems():
+            new_param[name[0] + '__' + param] = values
+
+        clf_pipeline = Pipeline([('pca', pca), (name[0], clf)])
+        #print clf_pipeline
+        new_param.update(pca_params)
+        #print new_param
+        clf_list_new.append((clf_pipeline, new_param))
+
+    return clf_list_new
 
 ### Task 1: Select what features you'll use.
 
@@ -151,32 +180,59 @@ features_list = poi + financial_features + email_features
 
 ### Task 3: Create new feature(s)
 
-new_features = []
+def add_new_features(features_list, data_dict):
+
+    new_features = ['ratio_of_to_poi_messages',
+                    'ratio_of_from_poi_messages',
+                    'total_poi_messages']
+
+    #features_list = features_list + new_features
+
+    for name in data_dict:
+
+        try:
+            ratio_of_to_poi_messages = data_dict[name]['from_this_person_to_poi'] /\
+                                       data_dict[name]['to_messages']
+        except:
+            ratio_of_to_poi_messages = 0
+
+        try:
+            ratio_of_from_poi_messages = data_dict[name]['from_poi_to_this_person'] /\
+                                                        data_dict[name]['from_messages']
+        except:
+            ratio_of_from_poi_messages = 0
+        data_dict[name]['total_poi_messages'] = data_dict[name]['from_this_person_to_poi'] +\
+                                                data_dict[name]['from_poi_to_this_person']
+
+        data_dict[name]['ratio_of_to_poi_messages'] = ratio_of_to_poi_messages
+        data_dict[name]['ratio_of_from_poi_messages'] = ratio_of_from_poi_messages
+        """
+        print data_dict[name]['from_this_person_to_poi'] / data_dict[name]['to_messages']
+        print data_dict[name]['from_poi_to_this_person'] / data_dict[name]['from_messages']
+        print data_dict[name]['from_this_person_to_poi'] + data_dict[name]['from_poi_to_this_person']
+        """
+    return features_list, data_dict
 
 ### Store to my_data set for easy export below.
 data_dict = data_load_process()
+#print data_dict['BAXTER JOHN C']['from_this_person_to_poi']
+#print data_dict['BAXTER JOHN C']['to_messages']
+#try:
+##    print (data_dict['BAXTER JOHN C']['from_this_person_to_poi'])/(data_dict['BAXTER JOHN C']['to_messages'])
+#except:
+#    print "cant be done"
+# Adding new features
+features_list, data_dict = add_new_features(features_list, data_dict)
 my_dataset = data_dict
+#print len(data_dict['METTS MARK'])
+
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
 
-
-### Task 4: Try a variety of classifiers
-### Please name your classifier clf for easy export below.
-### Note that if you want to do PCA or other multi-stage operations,
-### you'll need to use Pipelines. For more info:
-### http://scikit-learn.org/stable/modules/pipeline.html
-
-# create the classifier list
-#from sklearn.naive_bayes import GaussianNB
-#clf = GaussianNB()
-
-
 ### Task 5: Data processing
-
-from sklearn.decomposition import PCA
 
 def preprocessing_pca(features_train, features_test):
     pca = PCA(n_components=5, svd_solver='randomized').fit(features_train)
@@ -187,25 +243,32 @@ def preprocessing_pca(features_train, features_test):
 
 
 features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.3, random_state=42)
-features_train, features_test = preprocessing_pca(features_train, features_test)
+#features_train, features_test = preprocessing_pca(features_train, features_test)
 
 
+### Applying classifier
 
-
-### Task 6: Applying classifier
-
-# creatiing the classifier list
+# Creating the classifier list
 clf_list = classifier_list()
+
+# Add pca to the clf_lists
+clf_list = add_pca(clf_list)
+#print clf_list
+
 # getting the classifiers with their best parameters
 clf_list = classify(clf_list, features_train, labels_train)
+
 
 # Evaluate the precision, recall and f1 scores  of the classifiers
 clf_list = evaluate(clf_list, features_test, labels_test)
 clf_list_sorted = sort_clf(clf_list)
 print clf_list_sorted
 clf =  clf_list_sorted[1][0]
-"""
+print clf
 
+"""
+"""
+"""
 
 ###testing pipeline
 from sklearn.pipeline import Pipeline
@@ -217,11 +280,11 @@ clf_params = {"clf__C": [0.1, 1, 10, 50, 100], "clf__tol": [0.1, 0.01, 0.001, 0.
 # pre-processing
 from sklearn.decomposition import PCA
 pca = PCA()
-pca_params = {'pca__n_components': [5, 10, 20]}
+pca_params = {'pca__n_components': [5, 10, 15]}
 # pipeline
-clf_pipeline = Pipeline([('pca', pca),('logistic_regression',clf)])
+clf_pipeline = Pipeline([('pca', pca),('clf',clf)])
 clf_params.update(pca_params)
-print clf_params
+print clf_pipeline
 #clf_pipeline.set_params(clf_params)
 
 #gridsearch
@@ -231,7 +294,7 @@ clf_pipeline = GridSearchCV(clf_pipeline, clf_params)
 print clf_pipeline.get_params().keys()
 clf_pipeline.fit(features_train, labels_train)
 clf = clf_pipeline.best_estimator_
-clf = evaluate(clf, features_test, labels_test)
+#clf = evaluate(clf, features_test, labels_test)
 print clf
 """
 ### Task 7: Dump your classifier, dataset, and features_list
