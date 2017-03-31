@@ -186,45 +186,65 @@ def add_new_features(features_list, data_dict):
                     'ratio_of_from_poi_messages',
                     'total_poi_messages']
 
-    #features_list = features_list + new_features
+    features_list = features_list + new_features
 
     for name in data_dict:
 
+
+        if isinstance(data_dict[name]['from_this_person_to_poi'], str):
+            data_dict[name]['from_this_person_to_poi'] = 0
+        if isinstance(data_dict[name]['to_messages'],str):
+            data_dict[name]['to_messages'] = 0
+        if isinstance(data_dict[name]['from_poi_to_this_person'], str):
+            data_dict[name]['from_poi_to_this_person'] = 0
+        if isinstance(data_dict[name]['from_messages'], str):
+            data_dict[name]['from_messages'] = 0
+
         try:
-            ratio_of_to_poi_messages = data_dict[name]['from_this_person_to_poi'] /\
-                                       data_dict[name]['to_messages']
+            ratio_of_to_poi_messages = float(data_dict[name]['from_this_person_to_poi']) /\
+                                       float(data_dict[name]['to_messages'])
         except:
+            ratio_of_to_poi_messages = 0
+        if not isinstance(ratio_of_to_poi_messages, float):
             ratio_of_to_poi_messages = 0
 
         try:
-            ratio_of_from_poi_messages = data_dict[name]['from_poi_to_this_person'] /\
-                                                        data_dict[name]['from_messages']
+            ratio_of_from_poi_messages = float(data_dict[name]['from_poi_to_this_person']) /\
+                                         float(data_dict[name]['from_messages'])
         except:
             ratio_of_from_poi_messages = 0
+        if not isinstance(ratio_of_from_poi_messages, str):
+            ratio_of_from_poi_messages = 0
+
         data_dict[name]['total_poi_messages'] = data_dict[name]['from_this_person_to_poi'] +\
                                                 data_dict[name]['from_poi_to_this_person']
 
         data_dict[name]['ratio_of_to_poi_messages'] = ratio_of_to_poi_messages
         data_dict[name]['ratio_of_from_poi_messages'] = ratio_of_from_poi_messages
-        """
-        print data_dict[name]['from_this_person_to_poi'] / data_dict[name]['to_messages']
-        print data_dict[name]['from_poi_to_this_person'] / data_dict[name]['from_messages']
-        print data_dict[name]['from_this_person_to_poi'] + data_dict[name]['from_poi_to_this_person']
-        """
+
+
+
     return features_list, data_dict
 
-### Store to my_data set for easy export below.
+
+new_features = ['ratio_of_to_poi_messages',
+                    'ratio_of_from_poi_messages',
+                    'total_poi_messages']
+# Start of the main body of the program
+
+# loading the data set
 data_dict = data_load_process()
-#print data_dict['BAXTER JOHN C']['from_this_person_to_poi']
-#print data_dict['BAXTER JOHN C']['to_messages']
-#try:
-##    print (data_dict['BAXTER JOHN C']['from_this_person_to_poi'])/(data_dict['BAXTER JOHN C']['to_messages'])
-#except:
-#    print "cant be done"
+
 # Adding new features
 features_list, data_dict = add_new_features(features_list, data_dict)
+#for name in data_dict:
+#    for feat in new_features:
+#        print data_dict[name][feat]
+#        print isinstance(data_dict[name][feat], str)
+
+
+### Store to my_data set for easy export below.
 my_dataset = data_dict
-#print len(data_dict['METTS MARK'])
 
 
 ### Extract features and labels from dataset for local testing
@@ -263,7 +283,8 @@ clf_list = classify(clf_list, features_train, labels_train)
 clf_list = evaluate(clf_list, features_test, labels_test)
 clf_list_sorted = sort_clf(clf_list)
 print clf_list_sorted
-clf =  clf_list_sorted[1][0]
+print
+clf =  clf_list_sorted[0][0]
 print clf
 
 """
