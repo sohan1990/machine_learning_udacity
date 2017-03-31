@@ -83,22 +83,40 @@ def classify(clf_list, features_train, labels_train):
 
     # testing gridsearchcv
     from sklearn.model_selection import GridSearchCV
+    best_clf_list = []
 
     for classifier, params in clf_list:
-
-        #print classifier
-        #print params
 
         clf_rev = GridSearchCV(classifier, params)
         clf_rev.fit(features_train, labels_train)
         try:
-            print clf_rev.best_estimator_
+            best_clf_list.append(clf_rev.best_estimator_)
         except:
             print "no best estimator available for this classifier"
 
-    return 0
+    return best_clf_list
 
+### Evaluate the accuracy, recall and precision of the classifiers
+def evaluate(clf_list, features_test, labels_test):
 
+    from sklearn.metrics import recall_score, precision_score, f1_score
+
+    new_list = []
+    for clf in clf_list:
+        pred = clf.predict(features_test)
+        recall = recall_score(labels_test, pred)
+        precision = precision_score(labels_test, pred)
+        f1 = f1_score(labels_test, pred)
+        new_list.append((clf, recall, precision, f1))
+
+    return new_list
+
+### sort the classifier list according to their f1-score
+def sort_clf(clf_list):
+
+    clf_list_sorted = sorted(clf_list, key = lambda x:x[3], reverse=True)
+
+    return clf_list_sorted
 
 
 ### Task 1: Select what features you'll use.
@@ -176,28 +194,46 @@ features_train, features_test = preprocessing_pca(features_train, features_test)
 
 ### Task 6: Applying classifier
 
+# creatiing the classifier list
 clf_list = classifier_list()
+# getting the classifiers with their best parameters
+clf_list = classify(clf_list, features_train, labels_train)
 
-#for clf in clf_list:
-#    print clf
-
-a = classify(clf_list, features_train, labels_train)
-
-
-
-#clf.fit(features_train, labels_train)
-
-
-#pred = clf.predict(features_test)
-#acc = accuracy_score(pred, labels_test)
-#print acc
+# Evaluate the precision, recall and f1 scores  of the classifiers
+clf_list = evaluate(clf_list, features_test, labels_test)
+clf_list_sorted = sort_clf(clf_list)
+print clf_list_sorted
+clf =  clf_list_sorted[1][0]
+"""
 
 
+###testing pipeline
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+#classifier
+clf = LogisticRegression()
+clf_params = {"clf__C": [0.1, 1, 10, 50, 100], "clf__tol": [0.1, 0.01, 0.001, 0.0001]}
 
+# pre-processing
+from sklearn.decomposition import PCA
+pca = PCA()
+pca_params = {'pca__n_components': [5, 10, 20]}
+# pipeline
+clf_pipeline = Pipeline([('pca', pca),('logistic_regression',clf)])
+clf_params.update(pca_params)
+print clf_params
+#clf_pipeline.set_params(clf_params)
 
-
-
-
+#gridsearch
+from sklearn.model_selection import GridSearchCV
+clf_pipeline = GridSearchCV(clf_pipeline, clf_params)
+#clf_pipeline = GridSearchCV(clf_pipeline)
+print clf_pipeline.get_params().keys()
+clf_pipeline.fit(features_train, labels_train)
+clf = clf_pipeline.best_estimator_
+clf = evaluate(clf, features_test, labels_test)
+print clf
+"""
 ### Task 7: Dump your classifier, dataset, and features_list
 
-#dump_classifier_and_data(clf, my_dataset, features_list)
+dump_classifier_and_data(clf, my_dataset, features_list)
