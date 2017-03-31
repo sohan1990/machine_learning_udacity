@@ -6,9 +6,7 @@ sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
-from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
@@ -74,12 +72,11 @@ def classifier_list():
 
     # LOGISTIC REGRESSION
     clf_logreg = LogisticRegression()
-    clf_logreg_params = {"C": [0.1, 1, 10, 50, 100],
-                         "tol": [0.1, 0.01, 0.001, 0.0001],}
+    clf_logreg_params = {"C": [0.05, 0.5, 1, 10, 10**2,10**5,10**10, 10**20],
+                         "tol": [10**-1, 10**-5, 10**-10]}
     clf_list.append((clf_logreg, clf_logreg_params))
 
     return clf_list
-
 
 
 
@@ -124,6 +121,8 @@ def sort_clf(clf_list):
 
     return clf_list_sorted
 
+
+
 ### Function to add PCA
 def add_pca(clf_list):
 
@@ -148,7 +147,9 @@ def add_pca(clf_list):
 
     return clf_list_new
 
-### Task 1: Select what features you'll use.
+
+
+### Select what features to use.
 
 poi = ['poi']
 
@@ -253,14 +254,14 @@ labels, features = targetFeatureSplit(data)
 
 
 ### Task 5: Data processing
-
+"""
 def preprocessing_pca(features_train, features_test):
     pca = PCA(n_components=5, svd_solver='randomized').fit(features_train)
     features_train_pca = pca.transform(features_train)
     features_test_pca = pca.transform(features_test)
 
     return features_train_pca, features_test_pca
-
+"""
 
 features_train, features_test, labels_train, labels_test = train_test_split(features, labels, test_size=0.3, random_state=42)
 #features_train, features_test = preprocessing_pca(features_train, features_test)
@@ -287,37 +288,16 @@ print
 clf =  clf_list_sorted[0][0]
 print clf
 
+
 """
-"""
+# One of the best performances: precision = 0.34315, recall = 0.1515
+
+clf_best_till_now = Pipeline(steps=[('pca', PCA(copy=True, iterated_power='auto', n_components=10, random_state=None,
+             svd_solver='auto', tol=0.0, whiten=False)), ('RandomForestClassifier', RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+            max_depth=None, max_features='auto', n_jobs=1, oob_score=False, random_state=None,verbose=0, warm_start=False))])
+
 """
 
-###testing pipeline
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import LogisticRegression
-#classifier
-clf = LogisticRegression()
-clf_params = {"clf__C": [0.1, 1, 10, 50, 100], "clf__tol": [0.1, 0.01, 0.001, 0.0001]}
-
-# pre-processing
-from sklearn.decomposition import PCA
-pca = PCA()
-pca_params = {'pca__n_components': [5, 10, 15]}
-# pipeline
-clf_pipeline = Pipeline([('pca', pca),('clf',clf)])
-clf_params.update(pca_params)
-print clf_pipeline
-#clf_pipeline.set_params(clf_params)
-
-#gridsearch
-from sklearn.model_selection import GridSearchCV
-clf_pipeline = GridSearchCV(clf_pipeline, clf_params)
-#clf_pipeline = GridSearchCV(clf_pipeline)
-print clf_pipeline.get_params().keys()
-clf_pipeline.fit(features_train, labels_train)
-clf = clf_pipeline.best_estimator_
-#clf = evaluate(clf, features_test, labels_test)
-print clf
-"""
 ### Task 7: Dump your classifier, dataset, and features_list
 
 dump_classifier_and_data(clf, my_dataset, features_list)
