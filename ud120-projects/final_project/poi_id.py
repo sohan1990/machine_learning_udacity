@@ -179,15 +179,15 @@ features_list = poi + financial_features + email_features
 #print features_list
 
 
-### Task 3: Create new feature(s)
+### Create new feature(s)
 
 def add_new_features(features_list, data_dict):
 
-    new_features = ['ratio_of_to_poi_messages',
+    new_email_features = ['ratio_of_to_poi_messages',
                     'ratio_of_from_poi_messages',
                     'total_poi_messages']
 
-    features_list = features_list + new_features
+    features_list = features_list + new_email_features
 
     for name in data_dict:
 
@@ -224,13 +224,10 @@ def add_new_features(features_list, data_dict):
         data_dict[name]['ratio_of_from_poi_messages'] = ratio_of_from_poi_messages
 
 
-
     return features_list, data_dict
 
 
-new_features = ['ratio_of_to_poi_messages',
-                    'ratio_of_from_poi_messages',
-                    'total_poi_messages']
+
 # Start of the main body of the program
 
 # loading the data set
@@ -238,11 +235,6 @@ data_dict = data_load_process()
 
 # Adding new features
 features_list, data_dict = add_new_features(features_list, data_dict)
-#for name in data_dict:
-#    for feat in new_features:
-#        print data_dict[name][feat]
-#        print isinstance(data_dict[name][feat], str)
-
 
 ### Store to my_data set for easy export below.
 my_dataset = data_dict
@@ -301,3 +293,13 @@ clf_best_till_now = Pipeline(steps=[('pca', PCA(copy=True, iterated_power='auto'
 ### Task 7: Dump your classifier, dataset, and features_list
 
 dump_classifier_and_data(clf, my_dataset, features_list)
+
+"""
+provisions for improvement:
+1. more features
+2. KFold
+3. pre processing other than PCA - feature scaling
+4. lassso regression??
+"""
+
+
